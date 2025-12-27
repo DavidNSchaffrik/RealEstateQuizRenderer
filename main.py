@@ -111,8 +111,25 @@ class RightMoveListing:
                 print(f"An unexpected error occurred during parsing: {e}")
                 return []
 
-test = RightMoveListing("https://www.rightmove.co.uk/properties/163722422#/?channel=RES_BUY")
-print(asyncio.run(test.scrapeimageURL()))
+
+def load_lines(path: str, limit: int | None = None) -> list[str]:
+    with open(path, "r", encoding="utf-8") as f:
+        lines = [
+            line.strip()
+            for line in f
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+    return lines[:limit] if limit else lines
+
+
+
+
+if __name__ == "__main__":
+    test = RightMoveListing("https://www.rightmove.co.uk/properties/163722422#/?channel=RES_BUY")
+    print(asyncio.run(test.scrapeimageURL()))
+    links = load_lines("links.txt", limit=12)
+    print(links)
+
         
 
 
