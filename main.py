@@ -45,6 +45,22 @@ class RightMoveListing:
 
         tree = html.fromstring(r.text)
         return tree.xpath("//meta[@name='twitter:image:src']/@content")
+    
+    async def scrapeDescription(self):
+        url = self.url.split("#", 1)[0]
+        headers = {"User-Agent": "Mozilla/5.0"}
+
+        async with httpx.AsyncClient(headers=headers, timeout=20, follow_redirects=True) as client:
+            r = await client.get(url)
+            r.raise_for_status()
+            
+        m = re.search(r'"description":"(.*?)"', r.text)
+        return m.group(1) if m else None
+    
+
+
+
+
         
 
 
