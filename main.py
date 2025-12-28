@@ -3,6 +3,15 @@ import re
 import asyncio
 from lxml import html
 import json
+import sqlite3
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+DB_NAME = os.environ.get("DB_NAME", "default.db")
+
+
+DB_NAME = os.environ.get("DB_NAME", "default.db")
 
 class RightMoveListing:
     def __init__(self, url):
@@ -68,6 +77,7 @@ def load_lines(path: str, limit: int | None = None) -> list[str]:
     return lines[:limit] if limit else lines
 
 async def scrape_url(url: str) -> dict[str, object]:
+
     listing = RightMoveListing(url)
 
     try:
@@ -97,10 +107,38 @@ async def scrape_url(url: str) -> dict[str, object]:
             "error": f"{type(e).__name__}: {e}",
         }
 
-
+def init_db(db_path: str) -> None:
+    con = sqlite3.connect(db_path)
+    try:
+        con.execute("PRAGMA foreign_keys = ON;")
+        with con:  
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS listings (
+                    id INTEGER PRIMARY KEY,
+                    url TEXT NOT NULL UNIQUE,
+                    price TEXT,
+                    address TEXT,
+                    description TEXT,
+                    first_image_url TEXT,
+                    scraped_at TEXT NOT NULL,
+                    status TEXT,
+                    error TEXT
+                );
+            """)
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS listing_images (
+                    listing_id INTEGER NOT NULL,
+                    image_url TEXT NOT NULL,
+                    PRIMARY KEY (listing_id, image_url),
+                    FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+                );
+            """)
+    finally:
+        con.close()
 
 
 if __name__ == "__main__":
     test = RightMoveListing("https://www.rightmove.co.uk/properties/167177405#/?channel=RES_BUY")
     p = asyncio.run(test.scrapePrice())
     print(str(p))
+    init_db(DB_NAME)
