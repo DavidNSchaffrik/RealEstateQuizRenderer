@@ -10,9 +10,6 @@ load_dotenv()
 
 DB_NAME = os.environ.get("DB_NAME", "default.db")
 
-
-DB_NAME = os.environ.get("DB_NAME", "default.db")
-
 class RightMoveListing:
     def __init__(self, url):
         self.url = url
@@ -27,7 +24,8 @@ class RightMoveListing:
         async with httpx.AsyncClient(headers=headers, timeout=20, follow_redirects=True) as client:
             r = await client.get(url)
             r.raise_for_status()
-            return r.text
+            self.html = r.text
+            return self.html
 
     async def scrapePrice(self):
         htmltext = await self.fetch_html()
@@ -81,6 +79,7 @@ async def scrape_url(url: str) -> dict[str, object]:
     listing = RightMoveListing(url)
 
     try:
+        listing.fetch_html()
         price, address, first_image, description, images = await asyncio.gather(
             listing.scrapePrice(),
             listing.scrapeAddress(),
@@ -135,6 +134,7 @@ def init_db(db_path: str) -> None:
             """)
     finally:
         con.close()
+
 
 
 if __name__ == "__main__":
