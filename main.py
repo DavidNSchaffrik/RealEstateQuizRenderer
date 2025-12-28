@@ -150,6 +150,47 @@ def listing_exists(url: str, db_path: str) -> bool:
     finally:
         con.close()
 
+def insert_listing(data: dict[str, object], db_path: str) -> None:
+    url = clean_url(str(data["url"]))
+    scraped_at = datetime.now(timezone.utc).isoformat()
+
+    con = sqlite3.connect(db_path)
+    try:
+        con.execute("PRAGMA foreign_keys = ON;")
+        with con:
+            # Insert the listing row (skip if already present)
+            con.execute(
+                """
+                INSERT OR IGNORE INTO listings
+                    (url, price, address, description, first_image_url, scraped_at, status, error)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    url,
+                    data.get("price"),
+                    data.get("address"),
+                    data.get("description"),
+                    data.get("firstImageUrl"),
+                    scraped_at,
+                    "error" if data.get("error") else "ok",
+                    data.get("error"),
+                ),
+            )
+
+            # If it already existed, nothing to do
+            row = con.execute("SELECT id FROM listings WHERE url = ?;", (url,)).fetchone()
+            if not row:
+                return
+            listing_id = row[0]
+
+            # Insert image URLs (deduped by PRIMARY KEY(listing_id, image_url))
+            for img_url in data.get("imageUrls", []) or []:
+                con.execute(
+                    "INSERT OR IGNORE INTO listing_images (listing_id, image_url) VALUES (?, ?);",
+                    (listing_id, img_url),
+                )
+    finally:
+        con.close()
 
 
 
