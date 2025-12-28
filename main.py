@@ -12,11 +12,11 @@ DB_NAME = os.environ.get("DB_NAME", "default.db")
 
 class RightMoveListing:
     def __init__(self, url):
-        self.url = url
+        self.url = clean_url(url)
         self.html = None
 
     async def fetch_html(self):
-        url = self.url.split("#", 1)[0]
+        url = self.url
         headers = {"User-Agent": "Mozilla/5.0"}
         if self.html != None:
             return self.html
@@ -135,7 +135,8 @@ def init_db(db_path: str) -> None:
     finally:
         con.close()
 
-
+def clean_url(url: str) -> str:
+    return url.split("#", 1)[0]
 
 if __name__ == "__main__":
     test = RightMoveListing("https://www.rightmove.co.uk/properties/167177405#/?channel=RES_BUY")
