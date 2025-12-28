@@ -121,14 +121,45 @@ def load_lines(path: str, limit: int | None = None) -> list[str]:
         ]
     return lines[:limit] if limit else lines
 
+async def scrape_url(url: str) -> dict[str, object]:
+    listing = RightMoveListing(url)
+
+    try:
+        price, address, first_image, description, images = await asyncio.gather(
+            listing.scrapePrice(),
+            listing.scrapeAddress(),
+            listing.scrapefirstimageURL(),
+            listing.scrapeDescription(),
+            listing.scrapeimageURL(),
+        )
+
+        # first_image is a list (from xpath). Convert to a single string or None.
+        first_image_url = first_image[0] if isinstance(first_image, list) and first_image else None
+
+        return {
+            "url": url,
+            "price": price,
+            "address": address,
+            "description": description,
+            "firstImageUrl": first_image_url,
+            "imageUrls": images if isinstance(images, list) else [],
+        }
+
+    except Exception as e:
+        return {
+            "url": url,
+            "error": f"{type(e).__name__}: {e}",
+        }
+
 
 
 
 if __name__ == "__main__":
-    test = RightMoveListing("https://www.rightmove.co.uk/properties/163722422#/?channel=RES_BUY")
-    print(asyncio.run(test.scrapeimageURL()))
-    links = load_lines("links.txt", limit=12)
-    print(links)
+    test = asyncio.run(scrape_url("https://www.rightmove.co.uk/properties/163722422#/?channel=RES_BUY"))
+    print(test)
+
+
+
 
         
 
