@@ -79,7 +79,7 @@ async def scrape_url(url: str) -> dict[str, object]:
     listing = RightMoveListing(url)
 
     try:
-        listing.fetch_html()
+        await listing.fetch_html()
         price, address, first_image, description, images = await asyncio.gather(
             listing.scrapePrice(),
             listing.scrapeAddress(),
@@ -137,6 +137,22 @@ def init_db(db_path: str) -> None:
 
 def clean_url(url: str) -> str:
     return url.split("#", 1)[0]
+
+def listing_exists(url: str, db_path: str) -> bool:
+    url = clean_url(url)
+    con = sqlite3.connect(db_path)
+    try:
+        row = con.execute(
+            "SELECT 1 FROM listings WHERE url = ? LIMIT 1;",
+            (url,),
+        ).fetchone()
+        return row is not None
+    finally:
+        con.close()
+
+
+
+
 
 if __name__ == "__main__":
     test = RightMoveListing("https://www.rightmove.co.uk/properties/167177405#/?channel=RES_BUY")
