@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Listings{% endblock %}
+
+{% block content %}
+  <h1>Saved Listings</h1>
+
+  {% if not listings %}
+    <p>No listings yet.</p>
+  {% else %}
+    <div class="grid">
+      {% for l in listings %}
+        <a class="card" href="/listings/{{ l.id }}">
+          <div class="thumb">
+            {% if l.first_image_url %}
+              <img src="{{ l.first_image_url }}" alt="Listing image" loading="lazy" />
+            {% else %}
+              <div class="thumb-empty">No image</div>
+            {% endif %}
+          </div>
+
+          <div class="card-body">
+            <div class="price">{{ l.price or "Price not found" }}</div>
+            <div class="address">{{ l.address or "Address not found" }}</div>
+
+            <div class="meta">
+              <span class="pill {{ 'pill-ok' if l.status=='ok' else 'pill-error' }}">
+                {{ l.status }}
+              </span>
+              <span class="muted">{{ l.scraped_at }}</span>
+            </div>
+
+            {% if l.error %}
+              <div class="error-text">{{ l.error }}</div>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

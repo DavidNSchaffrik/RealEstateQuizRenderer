@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Listing {{ listing.id }}{% endblock %}
+
+{% block content %}
+  <h1>Listing</h1>
+
+  <div class="detail">
+    <div>
+      <div class="price big">{{ listing.price or "Price not found" }}</div>
+      <div class="address big">{{ listing.address or "Address not found" }}</div>
+
+      <p>
+        <a href="{{ listing.url }}" target="_blank" rel="noopener noreferrer">Open on Rightmove</a>
+      </p>
+
+      <div class="meta">
+        <span class="pill {{ 'pill-ok' if listing.status=='ok' else 'pill-error' }}">
+          {{ listing.status }}
+        </span>
+        <span class="muted">{{ listing.scraped_at }}</span>
+      </div>
+
+      {% if listing.error %}
+        <div class="alert alert-error">{{ listing.error }}</div>
+      {% endif %}
+
+      {% if listing.description %}
+        <h2>Description</h2>
+        <pre class="description">{{ listing.description }}</pre>
+      {% endif %}
+    </div>
+
+    <div>
+      <h2>Images ({{ images|length }})</h2>
+      {% if images %}
+        <div class="grid">
+          {% for img in images %}
+            <a class="card" href="{{ img }}" target="_blank" rel="noopener noreferrer">
+              <div class="thumb">
+                <img src="{{ img }}" alt="Image" loading="lazy" />
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No images saved.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

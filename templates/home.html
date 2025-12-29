@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+  <h1>Add Rightmove URLs</h1>
+
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  {% if results %}
+    <div class="alert alert-ok">
+      Processed {{ results|length }} URL(s).
+      Inserted: {{ results|selectattr("status","equalto","inserted")|list|length }},
+      Exists: {{ results|selectattr("status","equalto","exists")|list|length }},
+      Invalid: {{ results|selectattr("status","equalto","invalid")|list|length }},
+      Errors: {{ results|selectattr("status","equalto","error")|list|length }}
+    </div>
+
+    <ul>
+      {% for r in results %}
+        <li>
+          <strong>{{ r.status }}</strong> —
+          <a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.url }}</a>
+          {% if r.error %} — {{ r.error }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post" action="/scrape" class="form">
+    <label for="urls">Listing URLs (one per line)</label>
+    <textarea
+      id="urls"
+      name="urls"
+      rows="10"
+      placeholder="https://www.rightmove.co.uk/properties/...\nhttps://www.rightmove.co.uk/properties/..."
+      required
+    ></textarea>
+
+    <button type="submit">Scrape & Save</button>
+  </form>
+
+  <p class="muted"><a href="/listings">View saved listings</a></p>
+{% endblock %}
