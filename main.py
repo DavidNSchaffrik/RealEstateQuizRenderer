@@ -7,6 +7,8 @@ import sqlite3
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+from typing import Any
+
 
 load_dotenv()
 
@@ -194,6 +196,59 @@ def insert_listing(data: dict[str, object], db_path: str) -> None:
     finally:
         con.close()
 
+
+def _connect(db_path: str) -> sqlite3.Connection:
+    con = sqlite3.connect(db_path)
+    con.row_factory = sqlite3.Row
+    con.execute("PRAGMA foreign_keys = ON;")
+    return con
+
+def get_recent_listings(db_path: str, limit: int = 100) -> list[dict[str, Any]]:
+    con = _connect(db_path)
+    try:
+        rows = con.execute(
+            """
+            SELECT id, url, price, address, description, first_image_url, scraped_at, status, error
+            FROM listings
+            ORDER BY datetime(scraped_at) DESC
+            LIMIT ?;
+            """,
+            (limit,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        con.close()
+
+def get_listing_by_id(db_path: str, listing_id: int) -> dict[str, Any] | None:
+    con = _connect(db_path)
+    try:
+        row = con.execute(
+            """
+            SELECT id, url, price, address, description, first_image_url, scraped_at, status, error
+            FROM listings
+            WHERE id = ?;
+            """,
+            (listing_id,),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        con.close()
+
+def get_listing_images(db_path: str, listing_id: int) -> list[str]:
+    con = _connect(db_path)
+    try:
+        rows = con.execute(
+            """
+            SELECT image_url
+            FROM listing_images
+            WHERE listing_id = ?
+            ORDER BY image_url;
+            """,
+            (listing_id,),
+        ).fetchall()
+        return [r["image_url"] for r in rows]
+    finally:
+        con.close()
 
 
 """
