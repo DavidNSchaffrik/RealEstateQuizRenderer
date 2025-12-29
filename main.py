@@ -6,9 +6,14 @@ import json
 import sqlite3
 import os
 from dotenv import load_dotenv
+from datetime import datetime, timezone
+
 load_dotenv()
 
 DB_NAME = os.environ.get("DB_NAME", "default.db")
+
+def clean_url(url: str) -> str:
+    return url.split("#", 1)[0]
 
 class RightMoveListing:
     def __init__(self, url):
@@ -135,9 +140,6 @@ def init_db(db_path: str) -> None:
     finally:
         con.close()
 
-def clean_url(url: str) -> str:
-    return url.split("#", 1)[0]
-
 def listing_exists(url: str, db_path: str) -> bool:
     url = clean_url(url)
     con = sqlite3.connect(db_path)
@@ -194,9 +196,13 @@ def insert_listing(data: dict[str, object], db_path: str) -> None:
 
 
 
-
+"""
 if __name__ == "__main__":
-    test = RightMoveListing("https://www.rightmove.co.uk/properties/167177405#/?channel=RES_BUY")
-    p = asyncio.run(test.scrapePrice())
-    print(str(p))
     init_db(DB_NAME)
+
+    url = "https://www.rightmove.co.uk/properties/167177405#/?channel=RES_BUY"
+    if not listing_exists(url, DB_NAME):
+        data = asyncio.run(scrape_url(url))
+        insert_listing(data, DB_NAME)
+
+"""
